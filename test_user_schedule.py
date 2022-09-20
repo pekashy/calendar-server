@@ -1,6 +1,7 @@
 import pytest
 
-from user_schedule import *
+from scheduling.repeat_modes import *
+from scheduling.user_schedule import UserSchedule, EventLink
 
 
 @pytest.fixture
