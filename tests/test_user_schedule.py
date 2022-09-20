@@ -1,12 +1,12 @@
 import pytest
 
-from scheduling.repeat_modes import *
-from scheduling.user_schedule import UserSchedule, EventLink
+from user_schedule.repeat_modes import *
+from user_schedule.user_schedule import UserSchedule
 
 
 @pytest.fixture
 def schedule():
-    return UserSchedule('some_user_id')
+    return UserSchedule()
 
 
 @pytest.fixture
@@ -14,10 +14,9 @@ def event_date():
     return datetime.datetime(year=2000, month=1, day=3)
 
 
-def test_daily_recurring(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=RepeatEveryDay(start_datetime=event_date + datetime.timedelta(hours=4),
-                                                    duration=datetime.timedelta(hours=5)))
+def test_daily_recurring_intervals_intersection(schedule, event_date):
+    event = common.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
+                         duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.REPEAT_DAILY)
     prev_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
                                      end_datetime=event_date + datetime.timedelta(hours=2))
     left_intersect_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
@@ -70,9 +69,9 @@ def test_daily_recurring(schedule, event_date):
 
 
 def test_single_event(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=NoRepeat(start_datetime=event_date + datetime.timedelta(hours=4),
-                                              duration=datetime.timedelta(hours=5)))
+    event = common.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
+                         duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.SINGLE_MEETING)
+
     prev_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
                                      end_datetime=event_date + datetime.timedelta(hours=2))
     left_intersect_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
@@ -125,8 +124,9 @@ def test_single_event(schedule, event_date):
 
 
 def test_weekly_repeat(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=RepeatEveryWeek(start_datetime=event_date, duration=datetime.timedelta(hours=1)))
+    event = common.Event(id='event_id', schedule_start=event_date,
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WEEKLY)
+
     schedule.schedule_event(event)
 
     assert not schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(days=2)).date())
@@ -134,9 +134,8 @@ def test_weekly_repeat(schedule, event_date):
 
 
 def test_repeat_every_work_day(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=RepeatEveryWorkDay(start_datetime=datetime.datetime(year=2022, month=9, day=20),
-                                                        duration=datetime.timedelta(hours=1)))
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WORKDAYS)
     schedule.schedule_event(event)
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
@@ -144,9 +143,8 @@ def test_repeat_every_work_day(schedule, event_date):
 
 
 def test_repeat_every_year(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=RepeatEveryWorkDay(start_datetime=datetime.datetime(year=2022, month=9, day=20),
-                                                        duration=datetime.timedelta(hours=1)))
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_YEARLY)
     schedule.schedule_event(event)
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
@@ -155,10 +153,8 @@ def test_repeat_every_year(schedule, event_date):
 
 
 def test_repeat_every_month_same_week_same_day(schedule, event_date):
-    event = EventLink(id='event_id',
-                      recurring_info=RepeatEveryMonthSameWeekSameDay(
-                          start_datetime=datetime.datetime(year=2022, month=9, day=20),
-                          duration=datetime.timedelta(hours=1)))
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_MONTHLY)
 
     schedule.schedule_event(event)
 
@@ -168,18 +164,17 @@ def test_repeat_every_month_same_week_same_day(schedule, event_date):
 
 
 def test_find_intervals(schedule, event_date):
-    event1 = EventLink(id='event_id1',
-                       recurring_info=RepeatEveryDay(start_datetime=event_date,
-                                                     duration=datetime.timedelta(hours=1)))
+    event1 = common.Event(id='event_id1', schedule_start=event_date,
+                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_DAILY)
+
     schedule.schedule_event(event1)
-    event2 = EventLink(id='event_id2',
-                       recurring_info=NoRepeat(start_datetime=event_date + datetime.timedelta(hours=2),
-                                               duration=datetime.timedelta(hours=1)))
+    event2 = common.Event(id='event_id2', schedule_start=event_date + datetime.timedelta(hours=2),
+                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.SINGLE_MEETING)
     schedule.schedule_event(event2)
 
-    event3 = EventLink(id='event_id3',
-                       recurring_info=RepeatEveryDay(start_datetime=event_date + datetime.timedelta(hours=5),
-                                                     duration=datetime.timedelta(hours=18)))
+    event3 = common.Event(id='event_id3', schedule_start=event_date + datetime.timedelta(hours=5),
+                          duration=datetime.timedelta(hours=18), repeat_type=common.EventRepeatType.REPEAT_DAILY)
+
     schedule.schedule_event(event3)
 
     first_1h_interval = schedule.get_next_free_slot(start_datetime=event_date, min_duration=datetime.timedelta(hours=1))

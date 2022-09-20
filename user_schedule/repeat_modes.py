@@ -1,11 +1,11 @@
 import datetime
 
-from scheduling.common import DatetimeInterval, SchedulingError
+import common
+from user_schedule.intervals import DatetimeInterval, SchedulingError
 
 
 class SchedulingExpression:
-    def __init__(self, start_datetime: datetime.datetime,
-                 duration: datetime.timedelta = datetime.timedelta(days=0)):
+    def __init__(self, start_datetime: datetime.datetime, duration: datetime.timedelta):
         self.start_time = start_datetime.time()
         self.end_time = (start_datetime + duration).time()
         self.first_scheduled_date = start_datetime.date()
@@ -75,3 +75,21 @@ class RepeatEveryMonthSameWeekSameDay(SchedulingExpression):
 class NoRepeat(SchedulingExpression):
     def includes(self, date: datetime.date) -> bool:
         return self.first_scheduled_date == date
+
+
+class CustomRepeat(SchedulingExpression):
+    def includes(self, date: datetime.date) -> bool:
+        raise NotImplementedError('TODO: Implement free-form repeat conditions')
+
+
+def get_repeat_mode(event: common.Event) -> SchedulingExpression:
+    event_repeat_mode_constructor = {common.EventRepeatType.REPEAT_DAILY:    RepeatEveryDay,
+                                     common.EventRepeatType.SINGLE_MEETING:  NoRepeat,
+                                     common.EventRepeatType.REPEAT_WORKDAYS: RepeatEveryWorkDay,
+                                     common.EventRepeatType.REPEAT_MONTHLY:  RepeatEveryMonthSameWeekSameDay,
+                                     common.EventRepeatType.REPEAT_WEEKLY:   RepeatEveryWeek,
+                                     common.EventRepeatType.REPEAT_YEARLY:   RepeatEveryYear,
+                                     common.EventRepeatType.REPEAT_CUSTOM:   CustomRepeat,
+                                     }[event.repeat_type]
+
+    return event_repeat_mode_constructor(start_datetime=event.schedule_start, duration=event.duration)

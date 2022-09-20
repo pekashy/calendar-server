@@ -1,14 +1,16 @@
 import datetime
 import typing
 
-from scheduling.common import TimeInterval, DatetimeInterval
-from scheduling.constrains import DayConstrain, HolidayConstrain
-from scheduling.repeat_modes import SchedulingExpression
+import common
+import user_schedule.repeat_modes as repeats
+from user_schedule.constrains import DayConstrain, HolidayConstrain
+from user_schedule.intervals import TimeInterval, DatetimeInterval
+from user_schedule.repeat_modes import SchedulingExpression
 
 
-class EventLink(typing.NamedTuple):
+class ScheduleElement(typing.NamedTuple):
     id: str
-    # datetime of initial scheduling. event can have more occurrences defined by recurring_info
+    # datetime of initial user_schedule. event can have more occurrences defined by recurring_info
     recurring_info: SchedulingExpression
 
     def occurs_at(self, date: datetime.date) -> bool:
@@ -36,16 +38,26 @@ class EventLink(typing.NamedTuple):
         return DatetimeInterval(start_datetime=start_datetime_event, end_datetime=end_datetime_event)
 
 
+def _create_schedule_element(event: common.Event) -> ScheduleElement:
+    return ScheduleElement(id=event.id, recurring_info=repeats.get_repeat_mode(event=event))
+
+
+def _get_next_day_start_datetime(start_datetime: datetime.datetime):
+    next_day_start_date = start_datetime.date() + datetime.timedelta(days=1)
+    return datetime.datetime(year=next_day_start_date.year, month=next_day_start_date.month,
+                             day=next_day_start_date.day)
+
+
 class UserSchedule:
-    def __init__(self, user_id: str):
-        self.user_id = user_id
-        self.events: typing.Dict[str, EventLink] = {}
+    def __init__(self):
+        self.events: typing.Dict[str, ScheduleElement] = {}
         self.events_ordered: typing.List[str] = []  # kept ordered by start_time, non-overlapping
         self.date_constrains: typing.List[DayConstrain] = [HolidayConstrain()]  # TODO: allow to setup
 
-    def schedule_event(self, event: EventLink):
-        self.events_ordered.append(event.id)
-        self.events[event.id] = event
+    def schedule_event(self, event: common.Event):
+        schedule_element = _create_schedule_element(event=event)
+        self.events_ordered.append(schedule_element.id)
+        self.events[schedule_element.id] = schedule_element
         self.events_ordered.sort(key=lambda event_id: self.events[event_id].recurring_info.start_time)
 
     def is_event_occurring(self, event_id: str, date: datetime.date) -> bool:
@@ -57,15 +69,9 @@ class UserSchedule:
         return [event_id for event_id in self.events_ordered if
                 self.events[event_id].intersects_interval(interval)]
 
-    @staticmethod
-    def _get_next_day_start_datetime(start_datetime: datetime.datetime):
-        next_day_start_date = start_datetime.date() + datetime.timedelta(days=1)
-        return datetime.datetime(year=next_day_start_date.year, month=next_day_start_date.month,
-                                 day=next_day_start_date.day)
-
     def _get_events_datetimes_for_day(self, start_datetime: datetime.datetime) -> typing.List[DatetimeInterval]:
         events_datetimes = []
-        next_date_datetime = self._get_next_day_start_datetime(start_datetime)
+        next_date_datetime = _get_next_day_start_datetime(start_datetime)
         day_interval = DatetimeInterval(start_datetime=start_datetime,
                                         end_datetime=next_date_datetime - datetime.timedelta(microseconds=1))
         for event in [self.events[event_id] for event_id in self.events_ordered if
@@ -78,13 +84,13 @@ class UserSchedule:
                            following_days_to_look: int = 7) -> typing.Optional[DatetimeInterval]:
         """
         We neither want to search for next slot in a year for a busy user,
-        nor to in general validate if scheduling a meeting with given length is possible for user.
+        nor to in general validate if user_schedule a meeting with given length is possible for user.
         So we will recursively call this fi
         """
         if following_days_to_look < 0:
             return None
 
-        next_day_start_datetime = self._get_next_day_start_datetime(start_datetime)
+        next_day_start_datetime = _get_next_day_start_datetime(start_datetime)
         # Weekday or holiday day etc
         if any(constrain.is_restricts(start_datetime.date()) for constrain in self.date_constrains):
             return self.get_next_free_slot(start_datetime=next_day_start_datetime,
@@ -109,6 +115,6 @@ class UserSchedule:
                 # TODO: Add time constrains
                 return DatetimeInterval(start_datetime=last_event_end_datetime, end_datetime=curr_event_start_datetime)
 
-        return self.get_next_free_slot(start_datetime=self._get_next_day_start_datetime(start_datetime),
+        return self.get_next_free_slot(start_datetime=_get_next_day_start_datetime(start_datetime),
                                        min_duration=min_duration,
                                        following_days_to_look=following_days_to_look - 1)
