@@ -62,7 +62,7 @@ class RepeatEveryWeek(SchedulingExpression):
 
 class RepeatEveryWorkDay(SchedulingExpression):
     def includes(self, date: datetime.date) -> bool:
-        return self.first_scheduled_date.isoweekday() < 6 and super().includes(date)
+        return date.isoweekday() < 6 and super().includes(date)
 
 
 class RepeatEveryYear(SchedulingExpression):

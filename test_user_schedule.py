@@ -123,6 +123,49 @@ def test_single_event(schedule, event_date):
     assert schedule.get_events_in_interval(right_interval_next_day) == []
 
 
+def test_weekly_repeat(schedule, event_date):
+    event = EventLink(id='event_id',
+                      recurring_info=RepeatEveryWeek(start_datetime=event_date, duration=datetime.timedelta(hours=1)))
+    schedule.schedule_event(event)
+
+    assert not schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(days=2)).date())
+    assert schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(weeks=1)).date())
+
+
+def test_repeat_every_work_day(schedule, event_date):
+    event = EventLink(id='event_id',
+                      recurring_info=RepeatEveryWorkDay(start_datetime=datetime.datetime(year=2022, month=9, day=20),
+                                                        duration=datetime.timedelta(hours=1)))
+    schedule.schedule_event(event)
+
+    assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
+    assert schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=26))
+
+
+def test_repeat_every_year(schedule, event_date):
+    event = EventLink(id='event_id',
+                      recurring_info=RepeatEveryWorkDay(start_datetime=datetime.datetime(year=2022, month=9, day=20),
+                                                        duration=datetime.timedelta(hours=1)))
+    schedule.schedule_event(event)
+
+    assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
+    assert not schedule.is_event_occurring('event_id', datetime.date(year=2021, month=9, day=20))
+    assert schedule.is_event_occurring('event_id', datetime.date(year=2023, month=9, day=20))
+
+
+def test_repeat_every_month_same_week_same_day(schedule, event_date):
+    event = EventLink(id='event_id',
+                      recurring_info=RepeatEveryMonthSameWeekSameDay(
+                          start_datetime=datetime.datetime(year=2022, month=9, day=20),
+                          duration=datetime.timedelta(hours=1)))
+
+    schedule.schedule_event(event)
+
+    assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
+    assert not schedule.is_event_occurring('event_id', datetime.date(year=2021, month=9, day=20))
+    assert schedule.is_event_occurring('event_id', datetime.date(year=2022, month=10, day=18))
+
+
 def test_find_intervals(schedule, event_date):
     event1 = EventLink(id='event_id1',
                        recurring_info=RepeatEveryDay(start_datetime=event_date,
