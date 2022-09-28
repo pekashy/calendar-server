@@ -69,7 +69,7 @@ class UserSchedule:
         return [event_id for event_id in self.events_ordered if
                 self.events[event_id].intersects_interval(interval)]
 
-    def _get_events_datetimes_for_day(self, start_datetime: datetime.datetime) -> typing.List[DatetimeInterval]:
+    def get_events_datetimes_for_day(self, start_datetime: datetime.datetime) -> typing.List[DatetimeInterval]:
         events_datetimes = []
         next_date_datetime = _get_next_day_start_datetime(start_datetime)
         day_interval = DatetimeInterval(start_datetime=start_datetime,
@@ -97,12 +97,12 @@ class UserSchedule:
                                            min_duration=min_duration,
                                            following_days_to_look=following_days_to_look - 1)
 
-        daily_events = self._get_events_datetimes_for_day(start_datetime=start_datetime)
+        daily_events = self.get_events_datetimes_for_day(start_datetime=start_datetime)
 
         # Adding some sentinel events to respect day's interval borders
         if not daily_events:
             daily_events = [DatetimeInterval(start_datetime=start_datetime, end_datetime=start_datetime)]
-        daily_events = daily_events + [
+        daily_events += [
             DatetimeInterval(start_datetime=next_day_start_datetime - datetime.timedelta(microseconds=1),
                              end_datetime=next_day_start_datetime - datetime.timedelta(microseconds=1))]
 

@@ -1,4 +1,5 @@
 import datetime
+import heapq
 from typing import Dict, List, Optional
 
 import common
@@ -21,32 +22,26 @@ class Scheduler:
                                           search_time_interval: datetime.timedelta,
                                           interval_duration: datetime.timedelta) -> Optional[common.DatetimePair]:
         assert users
-        search_start = start_time
-        search_end = None
-        while search_start - start_time <= search_time_interval:
-            for user_id in users:
-                if user_id not in self.user_schedules:
-                    self.user_schedules[user_id] = UserSchedule()
+        intervals = []
 
-                user_interval: user_schedule.intervals.DatetimeInterval = self.user_schedules[
-                    user_id].get_next_free_slot(
-                    start_datetime=search_start,
-                    min_duration=interval_duration,
-                    following_days_to_look=0)
-                if not user_interval:
-                    search_start += interval_duration
-                    search_end = None
-                    break
+        for user_id in users:
+            if user_id not in self.user_schedules:
+                self.user_schedules[user_id] = UserSchedule()
 
-                search_start = max(search_start, user_interval.start_datetime)
-                search_end = min(search_end, user_interval.end_datetime) if search_end else user_interval.end_datetime
-
-                if search_end - search_start < interval_duration:
-                    search_start += interval_duration
-                    search_end = None
-                    break
-
-            if search_end:
-                return common.DatetimePair(start_datetime=search_start, end_datetime=search_end)
+            users_events: List[user_schedule.intervals.DatetimeInterval] = self.user_schedules[
+                user_id].get_events_datetimes_for_day(
+                start_datetime=start_time)
+            intervals.extend([event for event in users_events])
+        end_time = start_time + search_time_interval
+        # Sentinel end interval
+        intervals.append(user_schedule.intervals.DatetimeInterval(start_datetime=end_time, end_datetime=end_time))
+        heapq.heapify(intervals)
+        last_event_end = start_time
+        while last_event_end - start_time <= search_time_interval and intervals:
+            event = heapq.heappop(intervals)
+            if event.start_datetime - last_event_end >= interval_duration:
+                return common.DatetimePair(start_datetime=last_event_end,
+                                           end_datetime=last_event_end + interval_duration)
+            last_event_end = max(last_event_end, event.end_datetime)
 
         return None

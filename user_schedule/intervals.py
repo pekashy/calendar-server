@@ -17,6 +17,11 @@ class DatetimeInterval:
     def __eq__(self, other):
         return self.start_datetime == other.start_datetime and self.end_datetime == other.end_datetime
 
+    def __lt__(self, other):
+        if self.start_datetime != other.start_datetime:
+            return self.start_datetime < other.start_datetime
+        return self.end_datetime < other.end_datetime
+
 
 class TimeInterval(typing.NamedTuple):
     start_time: datetime.time
