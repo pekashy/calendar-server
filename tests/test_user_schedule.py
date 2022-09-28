@@ -161,39 +161,3 @@ def test_repeat_every_month_same_week_same_day(schedule, event_date):
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2021, month=9, day=20))
     assert schedule.is_event_occurring('event_id', datetime.date(year=2022, month=10, day=18))
-
-
-def test_find_intervals(schedule, event_date):
-    event1 = common.Event(id='event_id1', schedule_start=event_date,
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_DAILY)
-
-    schedule.schedule_event(event1)
-    event2 = common.Event(id='event_id2', schedule_start=event_date + datetime.timedelta(hours=2),
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.SINGLE_MEETING)
-    schedule.schedule_event(event2)
-
-    event3 = common.Event(id='event_id3', schedule_start=event_date + datetime.timedelta(hours=5),
-                          duration=datetime.timedelta(hours=18), repeat_type=common.EventRepeatType.REPEAT_DAILY)
-
-    schedule.schedule_event(event3)
-
-    first_1h_interval = schedule.get_next_free_slot(start_datetime=event_date, min_duration=datetime.timedelta(hours=1))
-    second_interval_for_1h = schedule.get_next_free_slot(start_datetime=first_1h_interval.end_datetime,
-                                                         min_duration=datetime.timedelta(hours=1))
-    interval_for_2h = schedule.get_next_free_slot(start_datetime=event_date, min_duration=datetime.timedelta(hours=2))
-    interval_for_4h = schedule.get_next_free_slot(start_datetime=event_date, min_duration=datetime.timedelta(hours=4))
-    interval_for_6h = schedule.get_next_free_slot(start_datetime=event_date, min_duration=datetime.timedelta(hours=6))
-    interval_for_4h_same_day = schedule.get_next_free_slot(start_datetime=event_date,
-                                                           min_duration=datetime.timedelta(hours=4),
-                                                           following_days_to_look=0)
-
-    assert first_1h_interval == DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
-                                                 end_datetime=event_date + datetime.timedelta(hours=2))
-    assert second_interval_for_1h == DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=3),
-                                                      end_datetime=event_date + datetime.timedelta(hours=5))
-    assert interval_for_2h == DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=3),
-                                               end_datetime=event_date + datetime.timedelta(hours=5))
-    assert interval_for_4h == DatetimeInterval(start_datetime=event_date + datetime.timedelta(days=1, hours=1),
-                                               end_datetime=event_date + datetime.timedelta(days=1, hours=5))
-    assert not interval_for_6h
-    assert not interval_for_4h_same_day
