@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-  server:
+  calendar-server:
     build:
       context: .
       dockerfile: Dockerfile-server
@@ -9,12 +9,12 @@ services:
     networks:
       - calendar-network
     links:
-      - data
+      - calendar-data
     depends_on:
-      - data
+      - calendar-data
     volumes:
       - ./logs:/logs
-  data:
+  calendar-data:
     image: postgres:14.5
     environment:
       POSTGRES_DB: "calendardb"
@@ -31,7 +31,10 @@ services:
       retries: 5
       start_period: 10s
     ports:
-      - "5433:5432"
+      - "5433:5433"
+    command: -p 5433
+    networks:
+      - calendar-network
 networks:
   calendar-network:
     driver: bridge

@@ -38,7 +38,7 @@ class ScheduleElement(typing.NamedTuple):
         return DatetimeInterval(start_datetime=start_datetime_event, end_datetime=end_datetime_event)
 
 
-def _create_schedule_element(event: common.Event) -> ScheduleElement:
+def _create_schedule_element(event: schemas.Event) -> ScheduleElement:
     return ScheduleElement(id=event.id, recurring_info=repeats.get_repeat_mode(event=event))
 
 
@@ -54,7 +54,7 @@ class UserSchedule:
         self.events_ordered: typing.List[str] = []  # kept ordered by start_time, non-overlapping
         self.date_constrains: typing.List[DayConstrain] = [HolidayConstrain()]  # TODO: allow to setup
 
-    def schedule_event(self, event: common.Event):
+    def schedule_event(self, event: schemas.Event):
         schedule_element = _create_schedule_element(event=event)
         self.events_ordered.append(schedule_element.id)
         self.events[schedule_element.id] = schedule_element

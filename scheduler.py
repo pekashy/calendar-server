@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 import common
 import user_schedule.intervals
-from common import Event
+from schemas import Event
 from user_schedule.user_schedule import UserSchedule
 
 

@@ -1,7 +1,10 @@
 import logging
-from flask import Flask
+from flask import Flask, request, jsonify
+from events_db import EventDB
+import schemas
 
 app = Flask(__name__)
+events_db = EventDB()
 
 
 @app.route('/event_list', methods=['GET'])
@@ -16,7 +19,9 @@ def event_info():
 
 @app.route('/create_event', methods=['POST'])
 def create_event():
-    pass
+    event = schemas.get_event_from_schema(schemas.EventSchema.from_dict(request.json))
+    events_db.save_event(event)
+    return jsonify({"Result": "Ok"})
 
 
 @app.route('/approve_event', methods=['POST'])
