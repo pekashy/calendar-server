@@ -15,22 +15,23 @@ services:
     volumes:
       - ./logs:/logs
   data:
-    image: postgres:14.54
+    image: postgres:14.5
     environment:
       POSTGRES_DB: "calendardb"
       POSTGRES_USER: "usr"
       POSTGRES_PASSWORD: "pwd"
       PGDATA: "./db/data"
     volumes:
-      - ./data/docker-entrypoint-initdb.d
+      - ./db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./db/data:/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U usr -d pwd" ]
+      test: [ "CMD-SHELL", "pg_isready -U usr -d calendardb" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
     ports:
-      - "5432:5432"
+      - "5433:5432"
 networks:
   calendar-network:
     driver: bridge
