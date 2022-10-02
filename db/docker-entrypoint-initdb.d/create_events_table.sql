@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS events (
    is_private BOOLEAN NOT NULL,
    repeat_type EVENT_REPEAT_TYPE NOT NULL,
    description TEXT NOT NULL,
-   custom_repeats_data JSON
+   custom_repeats_params JSON
 );

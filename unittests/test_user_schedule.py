@@ -1,5 +1,4 @@
 import pytest
-import schemas
 
 from user_schedule.repeat_modes import *
 from user_schedule.user_schedule import UserSchedule
@@ -16,9 +15,10 @@ def event_date():
 
 
 def test_daily_recurring_intervals_intersection(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
-                          duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.REPEAT_DAILY,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
+                         duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.REPEAT_DAILY,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
     prev_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
                                      end_datetime=event_date + datetime.timedelta(hours=2))
     left_intersect_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
@@ -71,9 +71,10 @@ def test_daily_recurring_intervals_intersection(schedule, event_date):
 
 
 def test_single_event(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
-                          duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.SINGLE_EVENT,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=event_date + datetime.timedelta(hours=4),
+                         duration=datetime.timedelta(hours=5), repeat_type=common.EventRepeatType.SINGLE_EVENT,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
 
     prev_interval = DatetimeInterval(start_datetime=event_date + datetime.timedelta(hours=1),
                                      end_datetime=event_date + datetime.timedelta(hours=2))
@@ -127,9 +128,10 @@ def test_single_event(schedule, event_date):
 
 
 def test_weekly_repeat(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=event_date,
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WEEKLY,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=event_date,
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WEEKLY,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
 
     schedule.schedule_event(event)
 
@@ -138,9 +140,10 @@ def test_weekly_repeat(schedule, event_date):
 
 
 def test_repeat_every_work_day(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WORKDAYS,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WORKDAYS,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
     schedule.schedule_event(event)
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
@@ -148,9 +151,10 @@ def test_repeat_every_work_day(schedule, event_date):
 
 
 def test_repeat_every_year(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_YEARLY,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_YEARLY,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
     schedule.schedule_event(event)
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
@@ -159,9 +163,10 @@ def test_repeat_every_year(schedule, event_date):
 
 
 def test_repeat_every_month_same_week_same_day(schedule, event_date):
-    event = schemas.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
-                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_MONTHLY,
-                          attendees=['user_id'], created_by='user_id', is_private=False, description='Some Event')
+    event = common.Event(id='event_id', schedule_start=datetime.datetime(year=2022, month=9, day=20),
+                         duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_MONTHLY,
+                         invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
+                         accepted=['user1_id'], custom_repeat_params=None)
 
     schedule.schedule_event(event)
 

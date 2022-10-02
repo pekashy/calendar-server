@@ -82,14 +82,14 @@ class CustomRepeat(SchedulingExpression):
         raise NotImplementedError('TODO: Implement free-form repeat conditions')
 
 
-def get_repeat_mode(event: schemas.Event) -> SchedulingExpression:
-    event_repeat_mode_constructor = {common.EventRepeatType.REPEAT_DAILY:    RepeatEveryDay,
-                                     common.EventRepeatType.SINGLE_EVENT:  NoRepeat,
+def get_repeat_mode(event: common.Event) -> SchedulingExpression:
+    event_repeat_mode_constructor = {common.EventRepeatType.REPEAT_DAILY: RepeatEveryDay,
+                                     common.EventRepeatType.SINGLE_EVENT: NoRepeat,
                                      common.EventRepeatType.REPEAT_WORKDAYS: RepeatEveryWorkDay,
-                                     common.EventRepeatType.REPEAT_MONTHLY:  RepeatEveryMonthSameWeekSameDay,
-                                     common.EventRepeatType.REPEAT_WEEKLY:   RepeatEveryWeek,
-                                     common.EventRepeatType.REPEAT_YEARLY:   RepeatEveryYear,
-                                     common.EventRepeatType.REPEAT_CUSTOM:   CustomRepeat,
+                                     common.EventRepeatType.REPEAT_MONTHLY: RepeatEveryMonthSameWeekSameDay,
+                                     common.EventRepeatType.REPEAT_WEEKLY: RepeatEveryWeek,
+                                     common.EventRepeatType.REPEAT_YEARLY: RepeatEveryYear,
+                                     common.EventRepeatType.REPEAT_CUSTOM: CustomRepeat,
                                      }[event.repeat_type]
 
     return event_repeat_mode_constructor(start_datetime=event.schedule_start, duration=event.duration)
