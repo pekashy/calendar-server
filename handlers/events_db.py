@@ -85,6 +85,7 @@ class EventDB:
 
     def get_user_events(self, user_id: str) -> List[Event]:
         res = []
+        self.logger.info(f'Start fetching')
         with self.connection.cursor() as cursor:
             cursor.execute(
                 'SELECT (id, created_by, schedule_start, duration, '
@@ -92,6 +93,6 @@ class EventDB:
                 'FROM events WHERE (%s)=ANY(accepted)', (user_id,)
             )
             cursor_resp = cursor.fetchall()
-            self.logger.debug(f'Fetched events for user {user_id}: `{cursor_resp}`')
+            self.logger.info(f'Fetched events for user {user_id}: `{cursor_resp}`')
             res.extend([_parse_event(event_columns=event[0]) for event in cursor_resp])
         return res

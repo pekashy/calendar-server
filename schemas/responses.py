@@ -45,3 +45,10 @@ class GetEventResponse(Response):
 @dataclass
 class GetUserEventsResponse(Response):
     events_list: List[str]
+
+
+@dataclass_json
+@dataclass
+class FirstFreeIntervalResponse(Response):
+    interval_start_time_iso: str
+

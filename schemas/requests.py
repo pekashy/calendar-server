@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 from dataclasses_json import dataclass_json
 
@@ -31,3 +32,12 @@ class UserEventsRequest:
     user_id: str
     interval_start_time_iso: str
     interval_duration_sec: int
+
+
+@dataclass_json
+@dataclass
+class FirstFreeIntervalRequest:
+    user_ids: List[str]
+    search_start_time_iso: str
+    interval_duration_sec: int
+    search_interval_duration_sec: int

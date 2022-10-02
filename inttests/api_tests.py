@@ -1,3 +1,4 @@
+import copy
 import datetime
 import uuid
 
@@ -40,14 +41,20 @@ def test_approve_event(create_event, get_event, approve_event, default_event):
     assert approve_event_resp.status_code == 404
 
 
+def recreate_event(event):
+    new_event = copy.deepcopy(event)
+    new_event.id = 'event_' + str(uuid.uuid4())
+    return new_event
+
+
 def test_events_in_interval(create_event, get_event, approve_event, default_event, user_events):
     #  Test will fail after first time, as event uuids generated the same for some reason. TODO: Fix
-    event_1 = default_event
-    event_2 = default_event
+    event_1 = recreate_event(default_event)
+    event_2 = recreate_event(default_event)
     event_2.schedule_start += datetime.timedelta(hours=2)
-    event_3 = default_event
+    event_3 = recreate_event(default_event)
     event_3.schedule_start += datetime.timedelta(hours=4)
-    event_4 = default_event
+    event_4 = recreate_event(default_event)
     event_4.schedule_start += datetime.timedelta(hours=6)
     create_event(event_1)
 
@@ -64,3 +71,33 @@ def test_events_in_interval(create_event, get_event, approve_event, default_even
     approve_event(event_4.id, user)
     assert set(user_events(user, default_event.schedule_start, datetime.timedelta(hours=5))) == {event_1.id, event_2.id,
                                                                                                  event_3.id}
+
+
+def test_first_free_interval(create_event, get_event, approve_event, default_event, user_events, first_free_interval):
+    event_1 = recreate_event(default_event)  # 00 to 01
+    event_2 = recreate_event(default_event)
+    event_2.schedule_start += datetime.timedelta(hours=2)
+    event_2.duration = datetime.timedelta(hours=2)  # 02 to 04
+    event_3 = recreate_event(default_event)
+    event_3.schedule_start += datetime.timedelta(hours=5)
+    event_3.duration = datetime.timedelta(hours=2)  # 05 to 07
+    create_event(event_1)
+    create_event(event_2)
+    create_event(event_3)
+
+    interval_start = first_free_interval(['user1_id'], interval_start=default_event.schedule_start,
+                                         interval_duration=datetime.timedelta(minutes=30),
+                                         search_interval_duration=datetime.timedelta(days=1))
+    assert interval_start == default_event.schedule_start + datetime.timedelta(hours=1)
+
+    event_4 = recreate_event(default_event)
+    event_4.created_by = 'user2_id'
+    event_4.accepted = ['user2_id']
+    event_4.duration = datetime.timedelta(hours=4)  # 00 to 04
+    create_event(event_4)
+
+    interval_start = first_free_interval(['user1_id', 'user2_id'], interval_start=default_event.schedule_start,
+                                         interval_duration=datetime.timedelta(minutes=30),
+                                         search_interval_duration=datetime.timedelta(days=1))
+
+    assert interval_start == default_event.schedule_start + datetime.timedelta(hours=4)

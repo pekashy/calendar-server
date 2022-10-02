@@ -44,7 +44,7 @@ def get_event_from_schema(event_schema: EventSchema) -> common.Event:
 
 def get_schema_from_event(event: common.Event) -> EventSchema:
     return EventSchema(id=event.id, created_by=event.created_by, schedule_start=event.schedule_start.isoformat(),
-                       duration_sec=event.duration.seconds,
+                       duration_sec=int(event.duration.total_seconds()),
                        invited=event.invited, accepted=event.accepted, is_private=event.is_private,
                        description=event.description,
                        custom_repeat_params=event.custom_repeat_params, repeat_type=event.repeat_type.value)

@@ -4,8 +4,8 @@ from flask import Flask, request
 
 import schemas.requests as requests_schemas
 from handlers.event_handler import EventHandler
-from handlers.user_handler import UserHandler
 from handlers.events_db import EventDB
+from handlers.user_handler import UserHandler
 
 logger = logging.getLogger('calendar')
 app = Flask(__name__)
@@ -32,6 +32,16 @@ def event_info():
 def create_event():
     create_request = requests_schemas.CreateEventRequest.from_dict(request.json)
     return events_handler.create_event(creation_request=create_request)
+
+
+@app.route('/find_interval', methods=['POST'])
+def find_interval():
+    get_free_interval_request: requests_schemas.FirstFreeIntervalRequest = (
+        requests_schemas.FirstFreeIntervalRequest.from_dict(request.json)
+    )
+    get_free_interval_request.interval_duration_sec = int(get_free_interval_request.interval_duration_sec)
+    get_free_interval_request.search_interval_duration_sec = int(get_free_interval_request.search_interval_duration_sec)
+    return events_handler.free_interval(get_free_interval_request)
 
 
 @app.route('/approve_event', methods=['POST'])

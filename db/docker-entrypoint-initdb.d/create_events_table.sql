@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS events (
    created_by TEXT NOT NULL,
    invited TEXT[] NOT NULL,
    accepted TEXT[] NOT NULL,
-   schedule_start TIMESTAMP WITH TIME ZONE NOT NULL,
+   schedule_start TIMESTAMP NOT NULL,
    duration INTERVAL NOT NULL,
    is_private BOOLEAN NOT NULL,
    repeat_type EVENT_REPEAT_TYPE NOT NULL,

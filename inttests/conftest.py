@@ -9,11 +9,13 @@ import schemas.event as event_schemas
 import schemas.requests as requests_schemas
 import schemas.responses as responses_schemas
 from common import EventRepeatType
+from typing import List
 
 CREATE_EVENT_ENDPOINT = "http://0.0.0.0:8050/create_event"
 GET_EVENT_ENDPOINT = "http://0.0.0.0:8050/event"
 APPROVE_EVENT_ENDPOINT = "http://0.0.0.0:8050/approve_event"
 USER_EVENTS_ENDPOINT = "http://0.0.0.0:8050/user_events"
+FIRST_INTERVAL_ENDPOINT = "http://0.0.0.0:8050/find_interval"
 
 
 @pytest.fixture
@@ -22,7 +24,7 @@ def default_event():
         id='event_' + str(uuid.uuid4()),
         created_by='user1_id',
         schedule_start=datetime.datetime(
-            year=2022, month=1, day=1, hour=1, minute=1, second=1, tzinfo=datetime.timezone.utc,
+            year=2022, month=1, day=1, hour=0, minute=0, second=0,
         ),
         duration=datetime.timedelta(hours=1),
         invited=['user1_id', 'user2_id'],
@@ -85,7 +87,7 @@ def user_events():
         user_events_req = requests_schemas.UserEventsRequest(
             user_id=user_id,
             interval_start_time_iso=interval_start.isoformat(),
-            interval_duration_sec=interval_duration.seconds,
+            interval_duration_sec=int(interval_duration.total_seconds()),
         )
         res = requests.get(url=USER_EVENTS_ENDPOINT,
                            params=user_events_req.to_dict(),
@@ -93,5 +95,26 @@ def user_events():
         response: responses_schemas.GetUserEventsResponse = responses_schemas.GetUserEventsResponse.from_dict(
             res.json())
         return response.events_list
+
+    return _method
+
+
+@pytest.fixture
+def first_free_interval():
+    def _method(users: List[str], interval_start: datetime.datetime, interval_duration: datetime.timedelta,
+                search_interval_duration: datetime.timedelta):
+        headers = {"Content-Type": "application/json"}
+        user_events_req = requests_schemas.FirstFreeIntervalRequest(
+            user_ids=users,
+            search_start_time_iso=interval_start.isoformat(),
+            interval_duration_sec=int(interval_duration.total_seconds()),
+            search_interval_duration_sec=int(search_interval_duration.total_seconds()),
+        )
+        res = requests.post(url=FIRST_INTERVAL_ENDPOINT,
+                            data=user_events_req.to_json(),
+                            headers=headers)
+        response: responses_schemas.FirstFreeIntervalResponse = responses_schemas.FirstFreeIntervalResponse.from_dict(
+            res.json())
+        return datetime.datetime.fromisoformat(response.interval_start_time_iso)
 
     return _method
