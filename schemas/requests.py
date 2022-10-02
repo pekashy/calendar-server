@@ -13,5 +13,13 @@ class CreateEventRequest:
 
 @dataclass_json
 @dataclass
+class ApproveEventRequest:
+    event_id: str
+    user_id: str
+
+
+@dataclass_json
+@dataclass
 class GetEventRequest:
     event_id: str
+    user_id: str

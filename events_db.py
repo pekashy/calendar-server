@@ -16,31 +16,38 @@ class EventDB:
 
     def connect(self):
         self.connection = psycopg.connect(
-            "host=calendar-data port=5433 dbname=calendardb user=usr password=pwd connect_timeout=10"
+            'host=calendar-data port=5433 dbname=calendardb user=usr password=pwd connect_timeout=10'
         )
 
     def save_event(self, event: Event):
         with self.connection.cursor() as cursor:
             self.logger.info(f'Saving event `{event.id}`')
             cursor.execute(
-                "INSERT INTO events (id, created_by, invited, accepted, schedule_start, "
-                "duration, is_private, repeat_type, description, custom_repeats_params) VALUES "
-                "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                "ON CONFLICT ON CONSTRAINT events_pkey DO NOTHING ",
+                'INSERT INTO events (id, created_by, invited, accepted, schedule_start, '
+                'duration, is_private, repeat_type, description, custom_repeats_params) VALUES '
+                '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '
+                'ON CONFLICT ON CONSTRAINT events_pkey DO NOTHING ',
                 (event.id, event.created_by, event.invited, [event.created_by], event.schedule_start,
                  event.duration, event.is_private, event.repeat_type, event.description, event.custom_repeat_params,)
             )
             self.connection.commit()
 
     def approve_event_invite(self, approving_user_id: str, event_id: str):
-        pass
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE events "
+                "SET accepted = array_append(accepted, (%s)) "
+                "WHERE id=(%s) AND NOT (%s)=ANY(accepted)",
+                (approving_user_id, event_id, approving_user_id,)
+            )
+            self.connection.commit()
 
     def get_event(self, event_id: str) -> Optional[Event]:
         with self.connection.cursor() as cursor:
             cursor.execute(
-                "SELECT (id, created_by, schedule_start, duration, "
-                "is_private, repeat_type, description, invited, accepted, custom_repeats_params) "
-                "FROM events WHERE (%s)=id", (event_id,)
+                'SELECT (id, created_by, schedule_start, duration, '
+                'is_private, repeat_type, description, invited, accepted, custom_repeats_params) '
+                'FROM events WHERE (%s)=id', (event_id,)
             )
             cursor_resp = cursor.fetchone()
             self.logger.debug(f'Retrieved event `{cursor_resp}`')

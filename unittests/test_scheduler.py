@@ -4,7 +4,7 @@ import pytest
 
 from common import DatetimePair, EventRepeatType
 from common import Event
-from scheduler import Scheduler
+from scheduler.scheduler import Scheduler
 
 
 @pytest.fixture

@@ -20,12 +20,22 @@ def event_list():
 
 @app.route('/event', methods=['GET'])
 def event_info():
-    event_id = request.args.get('id')
-    event = events_db.get_event(event_id)
+    get_event_info_reqest: requests_schemas.GetEventRequest = requests_schemas.GetEventRequest.from_dict(request.args)
+    event_id = get_event_info_reqest.event_id
+    user_id = get_event_info_reqest.user_id
+    event: common.Event = events_db.get_event(event_id)
     if not event:
         return responses_schemas.make_response(
             data=responses_schemas.BadResponse(error_code='not_found', message='Event was not found'),
             status=404
+        )
+    if event.is_private and user_id not in event.invited:
+        return responses_schemas.make_response(
+            data=responses_schemas.BadResponse(
+                error_code='permission_denied',
+                message='User was not invited to event, unable to get private event info'
+            ),
+            status=403
         )
     event_schema = schemas.event.get_schema_from_event(event)
     return responses_schemas.make_response(
@@ -54,7 +64,31 @@ def create_event():
 
 @app.route('/approve_event', methods=['POST'])
 def approve_event():
-    pass
+    approve_request = requests_schemas.ApproveEventRequest.from_dict(request.json)
+    event_id = approve_request.event_id
+    user_id = approve_request.user_id
+    event = events_db.get_event(event_id)
+    if not event:
+        return responses_schemas.make_response(
+            data=responses_schemas.BadResponse(error_code='not_found', message='Event was not found'),
+            status=404
+        )
+    if user_id not in event.invited:
+        return responses_schemas.make_response(
+            data=responses_schemas.BadResponse(
+                error_code='permission_denied',
+                message='User was not invited to event, unable to approve'
+            ),
+            status=403
+        )
+    if user_id in event.accepted:
+        return responses_schemas.make_response(
+            data=responses_schemas.OkResponse(message='Event Approved')
+        )
+    events_db.approve_event_invite(approving_user_id=user_id, event_id=event_id)
+    return responses_schemas.make_response(
+        data=responses_schemas.OkResponse(message='Event Approved')
+    )
 
 
 @app.route('/add_user', methods=['POST'])
