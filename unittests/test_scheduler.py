@@ -27,9 +27,7 @@ def test_scheduler(event_date):
                    repeat_type=EventRepeatType.SINGLE_EVENT, id='event3_id',
                    invited=['user1_id'], created_by='user1_id', is_private=False,
                    description='Some Event', accepted=['user1_id'], custom_repeat_params=None)  # 05 to 07
-    scheduler.schedule_event(user1, event1)
-    scheduler.schedule_event(user1, event2)
-    scheduler.schedule_event(user1, event3)
+    scheduler.schedule_events(user1, [event1, event2, event3])
     available_slot = scheduler.get_next_available_slot_for_users(users=[user1], start_time=event_date,
                                                                  search_time_interval=datetime.timedelta(days=1),
                                                                  interval_duration=datetime.timedelta(minutes=30))
@@ -41,7 +39,7 @@ def test_scheduler(event_date):
                    repeat_type=EventRepeatType.SINGLE_EVENT, id='event4_id',
                    invited=['user2_id'], created_by='user2_id', is_private=False,
                    description='Some Event', accepted=['user1_id'], custom_repeat_params=None)  # 00 to 04
-    scheduler.schedule_event(user2, event4)
+    scheduler.schedule_events(user2, [event4])
     available_slot = scheduler.get_next_available_slot_for_users(users=[user1, user2], start_time=event_date,
                                                                  search_time_interval=datetime.timedelta(days=1),
                                                                  interval_duration=datetime.timedelta(minutes=30))

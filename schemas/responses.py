@@ -1,12 +1,21 @@
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, Tuple, List
 
 from dataclasses_json import dataclass_json
 
 import schemas.event as event_schemas
 
 
-def make_response(status: Optional[int] = 200, data: Optional[Any] = None) -> tuple[Any, int, dict[str, str]]:
+@dataclass_json
+@dataclass
+class Response:
+    pass
+
+
+ServerResponse = Tuple[Any, int, dict[str, str]]
+
+
+def make_response(status: Optional[int] = 200, data: Optional[Response] = None) -> ServerResponse:
     data_str = ""
     if data:
         data_str = data.to_json()
@@ -15,18 +24,24 @@ def make_response(status: Optional[int] = 200, data: Optional[Any] = None) -> tu
 
 @dataclass_json
 @dataclass
-class OkResponse:
+class OkResponse(Response):
     message: Optional[str]
 
 
 @dataclass_json
 @dataclass
-class BadResponse:
+class BadResponse(Response):
     error_code: str
     message: Optional[str]
 
 
 @dataclass_json
 @dataclass
-class GetEventResponse:
+class GetEventResponse(Response):
     event: Optional[event_schemas.EventSchema]
+
+
+@dataclass_json
+@dataclass
+class GetUserEventsResponse(Response):
+    events_list: List[str]

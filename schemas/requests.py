@@ -23,3 +23,11 @@ class ApproveEventRequest:
 class GetEventRequest:
     event_id: str
     user_id: str
+
+
+@dataclass_json
+@dataclass
+class UserEventsRequest:
+    user_id: str
+    interval_start_time_iso: str
+    interval_duration_sec: int

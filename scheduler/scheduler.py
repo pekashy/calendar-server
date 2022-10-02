@@ -12,11 +12,11 @@ class Scheduler:
     def __init__(self):
         self.user_schedules: Dict[str, UserSchedule] = {}
 
-    def schedule_event(self, user_id: str, event: Event):
+    def schedule_events(self, user_id: str, events: List[Event]):
         if user_id not in self.user_schedules:
             self.user_schedules[user_id] = UserSchedule()
 
-        self.user_schedules[user_id].schedule_event(event)
+        self.user_schedules[user_id].schedule_events(events)
 
     def get_next_available_slot_for_users(self, users: List[str], start_time: datetime.datetime,
                                           search_time_interval: datetime.timedelta,

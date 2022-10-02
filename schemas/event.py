@@ -11,15 +11,23 @@ import common
 @dataclass
 class EventSchema:
     id: str
-    created_by: str
+    created_by: Optional[str]
     schedule_start: str
     repeat_type: str
     duration_sec: int
-    invited: List[str]
-    accepted: List[str]
+    invited: Optional[List[str]]
+    accepted: Optional[List[str]]
     is_private: bool
-    description: str
+    description: Optional[str]
     custom_repeat_params: Optional[Dict[str, Any]]
+
+
+def hide_private_fields(event: EventSchema) -> EventSchema:
+    event.created_by = None
+    event.invited = None
+    event.accepted = None
+    event.description = None
+    return event
 
 
 def get_event_from_schema(event_schema: EventSchema) -> common.Event:
@@ -40,6 +48,13 @@ def get_schema_from_event(event: common.Event) -> EventSchema:
                        invited=event.invited, accepted=event.accepted, is_private=event.is_private,
                        description=event.description,
                        custom_repeat_params=event.custom_repeat_params, repeat_type=event.repeat_type.value)
+
+
+@dataclass_json
+@dataclass
+class CustomRepeatsParamsSchema:
+    #  TODO: Implement
+    pass
 
 
 @dataclass_json

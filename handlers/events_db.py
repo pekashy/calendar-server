@@ -1,12 +1,38 @@
 import datetime
 import logging
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import psycopg
 from dateutil import parser
 
 import common
+import schemas.event
 from common import Event
+
+
+def _parse_event(event_columns: Sequence[str]) -> Event:
+    # TODO: Implement type correction with psycopg
+    event_duration_time = parser.parse(event_columns[3])
+    event_duration = datetime.timedelta(hours=event_duration_time.hour, minutes=event_duration_time.minute,
+                                        seconds=event_duration_time.second)
+    event_start_time = parser.parse(event_columns[2])
+    invited = event_columns[7][1:-1].split(',')
+    accepted = event_columns[8][1:-1].split(',')
+    is_private = event_columns[4] == 't'
+    return Event(
+        id=event_columns[0],
+        created_by=event_columns[1],
+        schedule_start=event_start_time,
+        duration=event_duration,
+        is_private=is_private,
+        repeat_type=common.EventRepeatType(event_columns[5]),
+        description=event_columns[6],
+        invited=invited,
+        accepted=accepted,
+        custom_repeat_params=(
+            schemas.event.CustomRepeatsParamsSchema.from_json(event_columns[9]) if event_columns[9] else None
+        ),
+    )
 
 
 class EventDB:
@@ -52,30 +78,20 @@ class EventDB:
             cursor_resp = cursor.fetchone()
             self.logger.debug(f'Retrieved event `{cursor_resp}`')
             if cursor_resp:
-                # TODO: Implement type correction with psycopg
                 event_data = cursor_resp[0]
-                event_duration_time = parser.parse(event_data[3])
-                event_duration = datetime.timedelta(hours=event_duration_time.hour, minutes=event_duration_time.minute,
-                                                    seconds=event_duration_time.second)
-                event_start_time = parser.parse(event_data[2])
-                invited = event_data[7][1:-1].split(',')
-                accepted = event_data[8][1:-1].split(',')
-                is_private = event_data[4] == 't'
-                event = Event(
-                    id=event_data[0],
-                    created_by=event_data[1],
-                    schedule_start=event_start_time,
-                    duration=event_duration,
-                    is_private=is_private,
-                    repeat_type=common.EventRepeatType(event_data[5]),
-                    description=event_data[6],
-                    invited=invited,
-                    accepted=accepted,
-                    custom_repeat_params=event_data[9],
-                )
-                return event
+                return _parse_event(event_data)
 
         return None
 
     def get_user_events(self, user_id: str) -> List[Event]:
-        pass
+        res = []
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT (id, created_by, schedule_start, duration, '
+                'is_private, repeat_type, description, invited, accepted, custom_repeats_params) '
+                'FROM events WHERE (%s)=ANY(accepted)', (user_id,)
+            )
+            cursor_resp = cursor.fetchall()
+            self.logger.debug(f'Fetched events for user {user_id}: `{cursor_resp}`')
+            res.extend([_parse_event(event_columns=event[0]) for event in cursor_resp])
+        return res

@@ -50,7 +50,7 @@ def test_daily_recurring_intervals_intersection(schedule, event_date):
         start_datetime=right_interval.start_datetime + datetime.timedelta(days=1),
         end_datetime=right_interval.end_datetime + datetime.timedelta(days=1))
 
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert schedule.is_event_occurring('event_id', event_date.date())
     assert schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(days=1)).date())
@@ -107,7 +107,7 @@ def test_single_event(schedule, event_date):
         start_datetime=right_interval.start_datetime + datetime.timedelta(days=1),
         end_datetime=right_interval.end_datetime + datetime.timedelta(days=1))
 
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert schedule.is_event_occurring('event_id', event_date.date())
     assert not schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(days=1)).date())
@@ -133,7 +133,7 @@ def test_weekly_repeat(schedule, event_date):
                          invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
                          accepted=['user1_id'], custom_repeat_params=None)
 
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert not schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(days=2)).date())
     assert schedule.is_event_occurring('event_id', (event_date + datetime.timedelta(weeks=1)).date())
@@ -144,7 +144,7 @@ def test_repeat_every_work_day(schedule, event_date):
                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_WORKDAYS,
                          invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
                          accepted=['user1_id'], custom_repeat_params=None)
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
     assert schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=26))
@@ -155,7 +155,7 @@ def test_repeat_every_year(schedule, event_date):
                          duration=datetime.timedelta(hours=1), repeat_type=common.EventRepeatType.REPEAT_YEARLY,
                          invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
                          accepted=['user1_id'], custom_repeat_params=None)
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2021, month=9, day=20))
@@ -168,7 +168,7 @@ def test_repeat_every_month_same_week_same_day(schedule, event_date):
                          invited=['user_id'], created_by='user_id', is_private=False, description='Some Event',
                          accepted=['user1_id'], custom_repeat_params=None)
 
-    schedule.schedule_event(event)
+    schedule.schedule_events([event])
 
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2022, month=9, day=24))
     assert not schedule.is_event_occurring('event_id', datetime.date(year=2021, month=9, day=20))

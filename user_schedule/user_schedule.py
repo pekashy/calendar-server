@@ -54,10 +54,9 @@ class UserSchedule:
         self.events_ordered: typing.List[str] = []  # kept ordered by start_time, non-overlapping
         self.date_constrains: typing.List[DayConstrain] = [HolidayConstrain()]  # TODO: allow to setup
 
-    def schedule_event(self, event: common.Event):
-        schedule_element = _create_schedule_element(event=event)
-        self.events_ordered.append(schedule_element.id)
-        self.events[schedule_element.id] = schedule_element
+    def schedule_events(self, events: typing.List[common.Event]):
+        self.events.update({event.id: _create_schedule_element(event=event) for event in events})
+        self.events_ordered.extend([event.id for event in events])
         self.events_ordered.sort(key=lambda event_id: self.events[event_id].recurring_info.start_time)
 
     def is_event_occurring(self, event_id: str, date: datetime.date) -> bool:
