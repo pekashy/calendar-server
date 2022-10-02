@@ -48,7 +48,6 @@ def recreate_event(event):
 
 
 def test_events_in_interval(create_event, get_event, approve_event, default_event, user_events):
-    #  Test will fail after first time, as event uuids generated the same for some reason. TODO: Fix
     event_1 = recreate_event(default_event)
     event_2 = recreate_event(default_event)
     event_2.schedule_start += datetime.timedelta(hours=2)
