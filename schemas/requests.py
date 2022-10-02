@@ -14,6 +14,12 @@ class CreateEventRequest:
 
 @dataclass_json
 @dataclass
+class CreateUserRequest:
+    user: event_schemas.UserSchema
+
+
+@dataclass_json
+@dataclass
 class ApproveEventRequest:
     event_id: str
     user_id: str

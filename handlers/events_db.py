@@ -8,6 +8,7 @@ from dateutil import parser
 import common
 import schemas.event
 from common import Event
+from schemas.event import UserSchema
 
 
 def _parse_event(event_columns: Sequence[str]) -> Event:
@@ -96,3 +97,14 @@ class EventDB:
             self.logger.info(f'Fetched events for user {user_id}: `{cursor_resp}`')
             res.extend([_parse_event(event_columns=event[0]) for event in cursor_resp])
         return res
+
+    def add_user(self, user: UserSchema):
+        with self.connection.cursor() as cursor:
+            self.logger.info(f'Saving user `{user.id}`')
+            cursor.execute(
+                'INSERT INTO users (name, timezone) VALUES '
+                '(%s, %s) '
+                'ON CONFLICT ON CONSTRAINT users_pkey DO NOTHING ',
+                (user.id, user.timezone,)
+            )
+            self.connection.commit()

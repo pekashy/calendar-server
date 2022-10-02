@@ -44,6 +44,16 @@ class UserHandler:
             data=responses_schemas.OkResponse(message='Event Approved')
         )
 
+    def create_user(
+            self,
+            create_request: requests_schemas.CreateUserRequest,
+    ) -> responses_schemas.ServerResponse:
+        user = create_request.user
+        self.events_db.add_user(user)
+        return responses_schemas.make_response(
+            data=responses_schemas.OkResponse(message='User Created')
+        )
+
     def user_events(
             self,
             user_events_request: requests_schemas.UserEventsRequest,

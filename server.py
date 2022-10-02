@@ -52,7 +52,8 @@ def approve_event():
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
-    pass
+    create_request = requests_schemas.CreateUserRequest.from_dict(request.json)
+    return user_handler.create_user(create_request=create_request)
 
 
 def _setup_logger():
